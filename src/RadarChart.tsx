@@ -168,23 +168,6 @@ const RadarChart: React.FC<RadarChartProps> = ({
           onMouseDown={handlePointerDown(i)}
         />
       ))}
-      {/* Axis labels (outer) */}
-      {labels.map((label, i) => {
-        const [x, y] = getPoint(i, 1.18);
-        return (
-          <text
-            key={i}
-            x={x}
-            y={y}
-            textAnchor="middle"
-            alignmentBaseline="middle"
-            fontSize={16}
-            fill="#222"
-          >
-            {label}
-          </text>
-        );
-      })}
       {/* Level labels */}
       {levelLabelElements}
     </svg>
