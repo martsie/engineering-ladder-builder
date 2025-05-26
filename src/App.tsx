@@ -165,6 +165,9 @@ function AppContent() {
         </div>
       </div>
       Inspired by <a href="https://github.com/jorgef/engineeringladders/tree/master" target="_blank" rel="noopener noreferrer" className="text-blue-500">jorgef/engineeringladders</a>
+      <div className="mt-4 text-center text-gray-500 text-sm">
+        <a href="https://github.com/martsie/engineering-ladder-builder" target="_blank" rel="noopener noreferrer" className="hover:underline">View on GitHub</a>
+      </div>
     </div>
   )
 }
