@@ -127,7 +127,7 @@ const RadarChart: React.FC<RadarChartProps> = ({
           textAnchor="middle"
           alignmentBaseline="middle"
           fontSize={12}
-          fill="#888"
+          fill="#111"
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
           {levelLabel}
@@ -136,8 +136,54 @@ const RadarChart: React.FC<RadarChartProps> = ({
     });
   });
 
+  // Encompassing pentagon (slightly larger than the outermost)
+  const encompassScale = 1.2;
+  const encompassPointsArr = Array.from({ length: numAxes }, (_, i) => getPoint(i, encompassScale));
+  const encompassPoints = encompassPointsArr.map(([x, y]) => `${x},${y}`).join(",");
+
   return (
-    <svg ref={svgRef} width={size} height={size} style={{ touchAction: 'none', cursor: draggingIdx !== null ? 'grabbing' : 'default' }}>
+    <svg
+      ref={svgRef}
+      width={size}
+      height={size}
+      className="block mx-auto"
+      style={{ touchAction: 'none', cursor: draggingIdx !== null ? 'grabbing' : 'default' }}
+    >
+      {/* Encompassing solid black pentagon */}
+      <polygon
+        points={encompassPoints}
+        fill="none"
+        stroke="#000"
+        strokeWidth={2}
+      />
+      {/* Radial lines from center to each tip of the encompassing pentagon */}
+      {encompassPointsArr.map(([x, y], i) => (
+        <line
+          key={`encompass-radial-${i}`}
+          x1={center}
+          y1={center}
+          x2={x}
+          y2={y}
+          stroke="#000"
+          strokeWidth={2}
+        />
+      ))}
+      {/* Top level labels at the tips of the encompassing pentagon */}
+      {encompassPointsArr.map(([x, y], i) => (
+        <text
+          key={`encompass-label-${i}`}
+          x={x}
+          y={y}
+          textAnchor="middle"
+          alignmentBaseline="middle"
+          fontSize={18}
+          fontWeight={600}
+          fill="#111"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {labels[i]}
+        </text>
+      ))}
       {/* Concentric pentagons for each level */}
       {levelPolygons}
       {/* Pentagon outline (outermost) */}
