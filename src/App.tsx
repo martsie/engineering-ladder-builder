@@ -1,6 +1,8 @@
 import { LadderProvider, useLadderContext } from './LadderContext'
 import RadarChart from './RadarChart'
 import './index.css'
+import { toPng } from 'html-to-image'
+import { useRef } from 'react'
 
 function AppContent() {
   const {
@@ -10,6 +12,8 @@ function AppContent() {
     topLabelOffsets, setTopLabelOffsets,
     levelLabelOffsets, setLevelLabelOffsets,
   } = useLadderContext()
+
+  const chartRef = useRef<HTMLDivElement>(null)
 
   // Export context state as JSON
   const handleExport = () => {
@@ -51,6 +55,16 @@ function AppContent() {
     e.target.value = ''
   }
 
+  // Export chart to PNG
+  const handleExportPng = async () => {
+    if (!chartRef.current) return
+    const dataUrl = await toPng(chartRef.current, { cacheBust: true, backgroundColor: '#f9fafb' })
+    const link = document.createElement('a')
+    link.download = 'ladder-chart.png'
+    link.href = dataUrl
+    link.click()
+  }
+
   const handleTopLabelChange = (i: number, newLabel: string) => {
     setTopLabels(topLabels.map((l, idx) => (idx === i ? newLabel : l)))
   }
@@ -71,16 +85,16 @@ function AppContent() {
 
   return (
     <div className="w-screen h-screen mx-auto p-8 font-sans bg-gray-50">
-      <h1 className="text-3xl font-bold text-center mb-8">Engineering Ladder Builder</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">Engineering Ladder Chart Builder</h1>
       <div className="flex gap-4 mb-6">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
           onClick={handleExport}
         >
-          Export
+          Export config
         </button>
         <label className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold cursor-pointer">
-          Import
+          Import config
           <input
             type="file"
             accept="application/json"
@@ -88,6 +102,12 @@ function AppContent() {
             className="hidden"
           />
         </label>
+        <button
+          className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-semibold"
+          onClick={handleExportPng}
+        >
+          Export PNG
+        </button>
       </div>
       <div className="flex">
         <div>
@@ -139,10 +159,11 @@ function AppContent() {
             ))}
           </div>
         </div>
-        <div className="flex justify-center items-center mt-8">
+        <div className="flex justify-center items-center mt-8" ref={chartRef}>
           <RadarChart />
         </div>
       </div>
+      Inspired by <a href="https://github.com/jorgef/engineeringladders/tree/master" target="_blank" rel="noopener noreferrer" className="text-blue-500">jorgef/engineeringladders</a>
     </div>
   )
 }
