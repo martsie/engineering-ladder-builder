@@ -1,112 +1,156 @@
-import { useState } from 'react'
+import { LadderProvider, useLadderContext } from './LadderContext'
 import RadarChart from './RadarChart'
 import './index.css'
 
-const DEFAULT_LABELS = [
-  'Technical',
-  'Leadership',
-  'Collaboration',
-  'Execution',
-  'Growth',
-]
+function AppContent() {
+  const {
+    topLabels, setTopLabels,
+    values, setValues,
+    levelLabels, setLevelLabels,
+    topLabelOffsets, setTopLabelOffsets,
+    levelLabelOffsets, setLevelLabelOffsets,
+  } = useLadderContext()
 
-const DEFAULT_VALUES = [3, 4, 2, 5, 3]
-const DEFAULT_LEVEL_LABELS = [
-  ['Adopts', 'Specializes', 'Evangelizes', 'Creates', 'Leads'], // Technical
-  ['Learns', 'Mentors', 'Inspires', 'Drives', 'Transforms'],    // Leadership
-  ['Joins', 'Supports', 'Facilitates', 'Aligns', 'Champions'],  // Collaboration
-  ['Delivers', 'Improves', 'Optimizes', 'Owns', 'Innovates'],   // Execution
-  ['Grows', 'Shares', 'Teaches', 'Guides', 'Elevates'],         // Growth
-]
+  // Export context state as JSON
+  const handleExport = () => {
+    const data = {
+      topLabels,
+      values,
+      levelLabels,
+      topLabelOffsets,
+      levelLabelOffsets,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'ladder-config.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
-function App() {
-  const [labels, setLabels] = useState<string[]>(DEFAULT_LABELS)
-  const [values, setValues] = useState<number[]>(DEFAULT_VALUES)
-  const [levelLabels, setLevelLabels] = useState<string[][]>(DEFAULT_LEVEL_LABELS)
+  // Import context state from JSON
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string)
+        if (data.topLabels) setTopLabels(data.topLabels)
+        if (data.values) setValues(data.values)
+        if (data.levelLabels) setLevelLabels(data.levelLabels)
+        if (data.topLabelOffsets) setTopLabelOffsets(data.topLabelOffsets)
+        if (data.levelLabelOffsets) setLevelLabelOffsets(data.levelLabelOffsets)
+      } catch (err) {
+        alert('Invalid JSON file.')
+      }
+    }
+    reader.readAsText(file)
+    // Reset file input so the same file can be imported again if needed
+    e.target.value = ''
+  }
 
-  const handleLabelChange = (i: number, newLabel: string) => {
-    setLabels(labels => labels.map((l, idx) => (idx === i ? newLabel : l)))
+  const handleTopLabelChange = (i: number, newLabel: string) => {
+    setTopLabels(topLabels.map((l, idx) => (idx === i ? newLabel : l)))
   }
 
   const handleValueChange = (i: number, newValue: number) => {
     // Always round to nearest tenth
     const rounded = Math.round(newValue * 10) / 10
-    setValues(values => values.map((v, idx) => (idx === i ? rounded : v)))
+    setValues(values.map((v, idx) => (idx === i ? rounded : v)))
   }
 
   const handleLevelLabelChange = (axisIdx: number, levelIdx: number, newLabel: string) => {
-    setLevelLabels(levelLabels =>
-      levelLabels.map((axisLevels, i) =>
-        i === axisIdx
-          ? axisLevels.map((lvl, j) => (j === levelIdx ? newLabel : lvl))
-          : axisLevels
-      )
-    )
+    setLevelLabels(levelLabels.map((axisLevels, i) =>
+      i === axisIdx
+        ? axisLevels.map((lvl, j) => (j === levelIdx ? newLabel : lvl))
+        : axisLevels
+    ))
   }
 
   return (
-    <div className="max-w-screen mx-auto p-8 font-sans bg-gray-50 rounded-xl shadow-lg">
+    <div className="w-screen h-screen mx-auto p-8 font-sans bg-gray-50">
       <h1 className="text-3xl font-bold text-center mb-8">Engineering Ladder Builder</h1>
+      <div className="flex gap-4 mb-6">
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
+          onClick={handleExport}
+        >
+          Export
+        </button>
+        <label className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold cursor-pointer">
+          Import
+          <input
+            type="file"
+            accept="application/json"
+            onChange={handleImport}
+            className="hidden"
+          />
+        </label>
+      </div>
       <div className="flex">
         <div>
           <div className="flex flex-col gap-4 mb-8">
-            {labels.map((label, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <input
-                  type="text"
-                  value={label}
-                  onChange={e => handleLabelChange(i, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-base bg-white"
-                  placeholder={`Label ${i + 1}`}
-                />
-                <input
-                  type="range"
-                  min={1}
-                  max={5}
-                  step={0.1}
-                  value={values[i]}
-                  onChange={e => handleValueChange(i, Number(e.target.value))}
-                  className="flex-2 w-40 accent-yellow-400"
-                />
-                <input
-                  type="number"
-                  min={1}
-                  max={5}
-                  step={0.1}
-                  value={values[i].toFixed(1)}
-                  onChange={e => handleValueChange(i, Number(e.target.value))}
-                  className="w-16 px-2 py-1 border border-gray-300 rounded-md text-right bg-white"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="my-8 p-4 bg-white rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4">Level Labels</h2>
-            {labels.map((axisLabel, axisIdx) => (
-              <div key={axisIdx} className="mb-4">
-                <strong className="block mb-1 text-gray-700">{axisLabel}</strong>
-                <div className="flex gap-2">
-                  {levelLabels[axisIdx].map((levelLabel, levelIdx) => (
-                    <input
-                      key={levelIdx}
-                      type="text"
-                      value={levelLabel}
-                      onChange={e => handleLevelLabelChange(axisIdx, levelIdx, e.target.value)}
-                      className="flex-1 px-2 py-1 border border-gray-200 rounded bg-gray-50 text-sm"
-                      placeholder={`Level ${levelIdx + 1}`}
-                    />
-                  ))}
+            {topLabels.map((label, i) => (
+              <div className="bg-white p-3 border rounded-md border-gray-200">
+                <div key={i} className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={label}
+                    onChange={e => handleTopLabelChange(i, e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-base bg-white"
+                    placeholder={`Label ${i + 1}`}
+                  />
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    step={0.1}
+                    value={values[i]}
+                    onChange={e => handleValueChange(i, Number(e.target.value))}
+                    className="flex-2 w-40 accent-yellow-400"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={0.1}
+                    value={values[i].toFixed(1)}
+                    onChange={e => handleValueChange(i, Number(e.target.value))}
+                    className="w-16 px-2 py-1 border border-gray-300 rounded-md text-right bg-white"
+                  />
+                </div>
+                <div className="mt-2 border-t border-gray-200 pt-2">
+                  <div className="flex gap-2">
+                    {levelLabels[i].map((levelLabel, levelIdx) => (
+                      <input
+                        key={levelIdx}
+                        type="text"
+                        value={levelLabel}
+                        onChange={e => handleLevelLabelChange(i, levelIdx, e.target.value)}
+                        className="flex-1 px-2 py-1 border border-gray-200 rounded bg-gray-50 text-sm"
+                        placeholder={`Level ${levelIdx + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
         <div className="flex justify-center items-center mt-8">
-          <RadarChart labels={labels} values={values} setValues={setValues} levelLabels={levelLabels} />
+          <RadarChart />
         </div>
       </div>
     </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <LadderProvider>
+      <AppContent />
+    </LadderProvider>
+  )
+}

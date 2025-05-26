@@ -1,32 +1,40 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useLadderContext } from './LadderContext';
 
-interface RadarChartProps {
-  labels: string[];
-  values: number[];
-  setValues: React.Dispatch<React.SetStateAction<number[]>>;
-  max?: number;
-  size?: number;
-  levelLabels?: string[][]; // New prop: per-axis level labels
-}
+const RadarChart: React.FC = () => {
+  const {
+    values,
+    levelLabels,
+    topLabels,
+    topLabelOffsets,
+    setTopLabelOffsets,
+    levelLabelOffsets,
+    setLevelLabelOffsets,
+  } = useLadderContext();
 
-const RadarChart: React.FC<RadarChartProps> = ({
-  labels,
-  values,
-  setValues,
-  max = 5,
-  size = 400,
-  levelLabels,
-}) => {
-  const numAxes = labels.length;
-  const center = size / 2;
+  const max = 5;
+  const size = 400;
+  const numAxes = topLabels.length;
+  const padding = 140;
+  const svgSize = size + padding * 2;
+  const center = svgSize / 2;
   const radius = size * 0.4;
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [draggingType, setDraggingType] = useState<'top' | 'level' | null>(null);
+  const [draggingLevel, setDraggingLevel] = useState<number | null>(null);
   const draggingIdxRef = useRef<number | null>(null);
+  const draggingTypeRef = useRef<'top' | 'level' | null>(null);
+  const draggingLevelRef = useRef<number | null>(null);
+  // For smooth dragging
+  const dragStartMouse = useRef<{ x: number; y: number } | null>(null);
+  const dragStartOffset = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     draggingIdxRef.current = draggingIdx;
-  }, [draggingIdx]);
+    draggingTypeRef.current = draggingType;
+    draggingLevelRef.current = draggingLevel;
+  }, [draggingIdx, draggingType, draggingLevel]);
 
   useEffect(() => {
     // Clean up listeners on unmount
@@ -76,33 +84,68 @@ const RadarChart: React.FC<RadarChartProps> = ({
     getPoint(i).join(",")
   ).join(" ");
 
-  // Mouse event handlers for dragging
-  const handlePointerDown = (idx: number) => (e: React.MouseEvent) => {
+  // Drag handlers for top-level labels
+  const handleTopLabelPointerDown = (i: number) => (e: React.MouseEvent) => {
     e.preventDefault();
-    setDraggingIdx(idx);
-    draggingIdxRef.current = idx;
+    setDraggingIdx(i);
+    setDraggingType('top');
+    setDraggingLevel(null);
+    if (svgRef.current) {
+      const rect = svgRef.current.getBoundingClientRect();
+      dragStartMouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      dragStartOffset.current = { ...topLabelOffsets[i] };
+    }
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+  };
+
+  // Drag handlers for level labels
+  const handleLevelLabelPointerDown = (axisIdx: number, levelIdx: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDraggingIdx(axisIdx);
+    setDraggingType('level');
+    setDraggingLevel(levelIdx);
+    if (svgRef.current) {
+      const rect = svgRef.current.getBoundingClientRect();
+      dragStartMouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      dragStartOffset.current = { ...levelLabelOffsets[axisIdx][levelIdx] };
+    }
     window.addEventListener('mousemove', handlePointerMove);
     window.addEventListener('mouseup', handlePointerUp);
   };
 
   const handlePointerMove = (e: MouseEvent) => {
-    if (draggingIdxRef.current === null || !svgRef.current) return;
+    if (!svgRef.current || !dragStartMouse.current || !dragStartOffset.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const dx = x - center;
-    const dy = y - center;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    // Clamp to [1, max] and round to nearest tenth
-    let value = (dist / radius) * max;
-    value = Math.max(1, Math.min(max, value));
-    value = Math.round(value * 10) / 10;
-    setValues((vals) => vals.map((v, i) => (i === draggingIdxRef.current ? value : v)));
+    const dx = x - dragStartMouse.current.x;
+    const dy = y - dragStartMouse.current.y;
+    if (draggingTypeRef.current === 'top' && draggingIdxRef.current !== null) {
+      // Move top label
+      const newOffsets = [...topLabelOffsets];
+      newOffsets[draggingIdxRef.current] = {
+        x: dragStartOffset.current.x + dx,
+        y: dragStartOffset.current.y + dy,
+      };
+      setTopLabelOffsets(newOffsets);
+    } else if (draggingTypeRef.current === 'level' && draggingIdxRef.current !== null && draggingLevelRef.current !== null) {
+      // Move level label
+      const newOffsets = levelLabelOffsets.map(arr => [...arr]);
+      newOffsets[draggingIdxRef.current][draggingLevelRef.current] = {
+        x: dragStartOffset.current.x + dx,
+        y: dragStartOffset.current.y + dy,
+      };
+      setLevelLabelOffsets(newOffsets);
+    }
   };
 
   const handlePointerUp = () => {
     setDraggingIdx(null);
-    draggingIdxRef.current = null;
+    setDraggingType(null);
+    setDraggingLevel(null);
+    dragStartMouse.current = null;
+    dragStartOffset.current = null;
     window.removeEventListener('mousemove', handlePointerMove);
     window.removeEventListener('mouseup', handlePointerUp);
   };
@@ -114,27 +157,28 @@ const RadarChart: React.FC<RadarChartProps> = ({
   const valuePoints = valuePointsArr.map(([x, y]) => `${x},${y}`).join(' ');
 
   // Render level labels along each axis
-  const levelLabelElements = labels.flatMap((_, axisIdx) => {
-    return levels[axisIdx].map((levelLabel, levelIdx) => {
-      // Place label at the correct radius for this level, slightly offset outward
-      const scale = (levelIdx + 1) / max + 0.07;
-      const [x, y] = getPoint(axisIdx, scale);
+  const levelLabelElements = topLabels.flatMap((_, axisIdx) =>
+    levelLabels[axisIdx].map((levelLabel, levelIdx) => {
+      const scale = ((levelIdx + 1) / max) * 0.9 + 0.07;
+      const [baseX, baseY] = getPoint(axisIdx, scale);
+      const { x: dx, y: dy } = levelLabelOffsets[axisIdx][levelIdx];
       return (
         <text
           key={`level-label-${axisIdx}-${levelIdx}`}
-          x={x}
-          y={y}
+          x={baseX + dx}
+          y={baseY + dy}
           textAnchor="middle"
           alignmentBaseline="middle"
-          fontSize={12}
+          fontSize={10}
           fill="#111"
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
+          style={{ pointerEvents: 'all', userSelect: 'none', cursor: 'move' }}
+          onMouseDown={handleLevelLabelPointerDown(axisIdx, levelIdx)}
         >
           {levelLabel}
         </text>
       );
-    });
-  });
+    })
+  );
 
   // Encompassing pentagon (slightly larger than the outermost)
   const encompassScale = 1.2;
@@ -144,8 +188,8 @@ const RadarChart: React.FC<RadarChartProps> = ({
   return (
     <svg
       ref={svgRef}
-      width={size}
-      height={size}
+      width={svgSize}
+      height={svgSize}
       className="block mx-auto"
       style={{ touchAction: 'none', cursor: draggingIdx !== null ? 'grabbing' : 'default' }}
     >
@@ -168,20 +212,21 @@ const RadarChart: React.FC<RadarChartProps> = ({
           strokeWidth={2}
         />
       ))}
-      {/* Top level labels at the tips of the encompassing pentagon */}
+      {/* Top level labels at the tips of the encompassing pentagon, draggable */}
       {encompassPointsArr.map(([x, y], i) => (
         <text
           key={`encompass-label-${i}`}
-          x={x}
-          y={y}
+          x={x + topLabelOffsets[i].x}
+          y={y + topLabelOffsets[i].y}
           textAnchor="middle"
           alignmentBaseline="middle"
           fontSize={18}
           fontWeight={600}
           fill="#111"
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
+          style={{ pointerEvents: 'all', userSelect: 'none', cursor: 'move' }}
+          onMouseDown={handleTopLabelPointerDown(i)}
         >
-          {labels[i]}
+          {topLabels[i]}
         </text>
       ))}
       {/* Concentric pentagons for each level */}
@@ -211,10 +256,17 @@ const RadarChart: React.FC<RadarChartProps> = ({
           stroke="transparent"
           strokeWidth={3}
           style={{ cursor: 'grab' }}
-          onMouseDown={handlePointerDown(i)}
+          onMouseDown={e => {
+            e.preventDefault();
+            setDraggingIdx(i);
+            setDraggingType(null);
+            setDraggingLevel(null);
+            window.addEventListener('mousemove', handlePointerMove);
+            window.addEventListener('mouseup', handlePointerUp);
+          }}
         />
       ))}
-      {/* Level labels */}
+      {/* Level labels, draggable */}
       {levelLabelElements}
     </svg>
   );
