@@ -1,54 +1,26 @@
-# React + TypeScript + Vite
+# Engineering Ladder Chart Builder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a tool I vibe coded to help visualize and customize engineering career ladders as radar charts. I wanted something interactive, easy to tweak, and exportable—so you can play with your own axes, levels, and labels, and share or save your ladders.
 
-Currently, two official plugins are available:
+## What can you do with it?
+- Change the names of axes and levels to fit your org or your own growth areas.
+- Adjust values for each axis with sliders or number inputs.
+- Drag any label (top-level or level) to wherever you want for clarity.
+- Save your ladder as a JSON file, or load one back in.
+- Export the chart as a PNG image for docs, slides, or sharing.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Try it out
+[https://martsie.github.io/engineering-ladder-builder/](https://martsie.github.io/engineering-ladder-builder/)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## How to use locally
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Why?
+I was inspired by [jorgef/engineeringladders](https://github.com/jorgef/engineeringladders) and wanted a more visual, hands-on way to explore and communicate growth frameworks. If you find it useful or have ideas, feel free to open an issue or PR!
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Built with [React](https://react.dev/), [Vite](https://vitejs.dev/), and [Tailwind CSS](https://tailwindcss.com/).
