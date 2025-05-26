@@ -1,6 +1,6 @@
 # Engineering Ladder Chart Builder
 
-This is a tool I vibe coded to help visualize and customize engineering career ladders as radar charts. I wanted something interactive, easy to tweak, and exportable—so you can play with your own axes, levels, and labels, and share or save your ladders.
+Engineering Ladder Chart Builder is an interactive tool for visualizing and customizing engineering career ladders as radar charts. It’s designed to be flexible, easy to use, and exportable—so you can define your own axes, levels, and labels, and save or share your ladders.
 
 ## What can you do with it?
 - Change the names of axes and levels to fit your org or your own growth areas.
