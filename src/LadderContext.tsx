@@ -29,7 +29,7 @@ const DEFAULT_LEVEL_LABELS = [
   ["Adopts", "Specializes", "Evangelizes", "Masters", "Creates"],
   ["Enhances", "Designs", "Owns", "Evolves", "Leads"],
   ["Learns", "Supports", "Mentors", "Coordinates", "Manages"],
-  ["Follows", "Enforces", "Challenges", "Adjusts", "De-fines"],
+  ["Follows", "Enforces", "Challenges", "Adjusts", "Defines"],
   ["Subsystem", "Team", "Multiple Teams", "Company", "Community"]
 ];
 const DEFAULT_TOP_LABEL_OFFSETS = [
