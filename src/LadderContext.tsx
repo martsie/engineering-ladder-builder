@@ -99,6 +99,7 @@ export const LadderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLadderContext() {
   const ctx = useContext(LadderContext);
   if (!ctx) throw new Error('useLadderContext must be used within a LadderProvider');

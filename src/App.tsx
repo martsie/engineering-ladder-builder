@@ -46,7 +46,8 @@ function AppContent() {
         if (data.levelLabels) setLevelLabels(data.levelLabels)
         if (data.topLabelOffsets) setTopLabelOffsets(data.topLabelOffsets)
         if (data.levelLabelOffsets) setLevelLabelOffsets(data.levelLabelOffsets)
-      } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_err) {
         alert('Invalid JSON file.')
       }
     }

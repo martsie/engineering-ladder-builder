@@ -45,12 +45,6 @@ const RadarChart: React.FC = () => {
     // eslint-disable-next-line
   }, []);
 
-  // Provide default level labels if not given
-  const defaultLevels = Array.from({ length: max }, (_, i) => `Level ${i + 1}`);
-  const levels: string[][] = levelLabels && levelLabels.length === numAxes
-    ? levelLabels.map((arr) => arr.length === max ? arr : defaultLevels)
-    : Array(numAxes).fill(defaultLevels);
-
   // Calculate points for a given axis and value scale
   const getPoint = (i: number, valueScale = 1) => {
     const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
