@@ -110,7 +110,7 @@ function AppContent() {
           Export PNG
         </button>
       </div>
-      <div className="flex">
+      <div className="lg:flex">
         <div>
           <div className="flex flex-col gap-4 mb-8">
             {topLabels.map((label, i) => (
@@ -130,7 +130,7 @@ function AppContent() {
                     step={0.1}
                     value={values[i]}
                     onChange={e => handleValueChange(i, Number(e.target.value))}
-                    className="flex-2 w-40 accent-yellow-400"
+                    className="flex-2 accent-yellow-400"
                   />
                   <input
                     type="number"
@@ -139,11 +139,11 @@ function AppContent() {
                     step={0.1}
                     value={values[i].toFixed(1)}
                     onChange={e => handleValueChange(i, Number(e.target.value))}
-                    className="w-16 px-2 py-1 border border-gray-300 rounded-md text-right bg-white"
+                    className="px-2 py-1 border border-gray-300 rounded-md text-right bg-white"
                   />
                 </div>
                 <div className="mt-2 border-t border-gray-200 pt-2">
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {levelLabels[i].map((levelLabel, levelIdx) => (
                       <input
                         key={levelIdx}
